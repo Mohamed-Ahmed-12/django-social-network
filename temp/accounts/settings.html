@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container" id="main">
+    <div class="row">
+        <div class="col-12">
+            <!-- Page title -->
+            <div class=" row my-5 justify-content-between">
+                <h3 class="col-auto bi bi-gear text-primary fw-bold"> Profile Settings</h3>
+                <button type="button" class="col-auto btn btn-danger btn-md">Delete profile</button>
+            </div>
+            <!-- Form START -->
+
+            <div class="row mb-5 gx-5">
+                <!-- Upload profile -->
+                <div class="col-xxl-4">
+                    <div class="bg-secondary-soft px-4 py-5 rounded">
+                        <div class="row g-3 ">
+                            <h4 class="mb-4 mt-0 text-danger fw-bold">Change your profile photo</h4>
+                            <div class="text-center d-flex  align-items-center justify-content-between">
+                                <!-- Image upload -->
+                                <div class="square position-relative display-2 mb-3">
+                                    {% if not profile_img%}
+                                    <img src="{% static 'images/default.png' %}" alt="" height="150px"
+                                        class="rounded-circle">
+                                    {% else %}
+                                    <img src="{{ profile_img.url }}" width="150px" height="150px"
+                                        class="rounded-circle">
+                                    {% endif %}
+                                </div>
+                                <!-- Button -->
+                                <input type="file" id="customFile" name="file" hidden="">
+                                <label class="btn btn-success btn-block" for="customFile">Change</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xxl-2"></div>
+                <!-- Contact detail -->
+                <div class="col-xxl-6 mb-5 mb-xxl-0">
+                    <div class="bg-secondary-soft px-4 py-5 rounded">
+                        <div class="row g-3">
+                            <h4 class="mb-4 mt-0 text-danger fw-bold">Contact detail</h4>
+                            <!-- First Name -->
+                            <div class="col-md-6">
+                                <label class="form-label">First Name *</label>
+                                <input type="text" class="form-control" placeholder="" aria-label="First name"
+                                    value="{{ request.user.first_name }}" disabled>
+                            </div>
+                            <!-- Last name -->
+                            <div class="col-md-6">
+                                <label class="form-label">Last Name *</label>
+                                <input type="text" class="form-control" placeholder="" aria-label="Last name"
+                                    value="{{ request.user.last_name }}" disabled>
+                            </div>
+
+                            <!-- Mobile number -->
+                            <div class="col-md-6">
+                                <label class="form-label">Mobile number *</label>
+                                <input type="text" class="form-control" placeholder="" aria-label="Phone number"
+                                    value="{{mobile}}" disabled>
+                            </div>
+                            <!-- Email -->
+                            <div class="col-md-6">
+                                <label for="inputEmail4" class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="inputEmail4"
+                                    value="{{ request.user.email }}" disabled>
+                            </div>
+                        </div> <!-- Row END -->
+                    </div>
+                </div>
+            </div> <!-- Row END -->
+
+            <!-- Social media detail -->
+            <div class="row mb-5 gx-5">
+                <div class="col-xxl-6 mb-5 mb-xxl-0">
+                    <div class="bg-secondary-soft px-4 py-5 rounded">
+                        <div class="row g-3">
+                            <h4 class="mb-4 mt-0 text-danger fw-bold">Social media detail</h4>
+                            <!-- Facebook -->
+                            <div class="col-md-6">
+                                <label class="form-label"><i
+                                        class="fab fa-fw fa-facebook me-2 text-facebook"></i>Facebook *</label>
+                                <input type="text" class="form-control" placeholder="" aria-label="Facebook"
+                                    value="http://www.facebook.com">
+                            </div>
+                            <!-- Twitter -->
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="fab fa-fw fa-twitter text-twitter me-2"></i>Twitter
+                                    *</label>
+                                <input type="text" class="form-control" placeholder="" aria-label="Twitter"
+                                    value="http://www.twitter.com">
+                            </div>
+                            <!-- Linkedin -->
+                            <div class="col-md-6">
+                                <label class="form-label"><i
+                                        class="fab fa-fw fa-linkedin-in text-linkedin me-2"></i>Linkedin *</label>
+                                <input type="text" class="form-control" placeholder="" aria-label="Linkedin"
+                                    value="http://www.linkedin.com">
+                            </div>
+                            <!-- Instragram -->
+                            <div class="col-md-6">
+                                <label class="form-label"><i
+                                        class="fab fa-fw fa-instagram text-instagram me-2"></i>Instagram *</label>
+                                <input type="text" class="form-control" placeholder="" aria-label="Instragram"
+                                    value="http://www.instragram.com">
+                            </div>
+                        </div> <!-- Row END -->
+                    </div>
+                </div>
+
+                <!-- change password -->
+                <div class="col-xxl-6">
+                    <form action="{% url 'changepass' %}" method="POST">{% csrf_token %}
+                        <div class="bg-secondary-soft px-4 py-5 rounded">
+                            <div class="row g-3">
+                                <h4 class="mb-4 mt-0 text-danger fw-bold">Change Password</h4>
+                                {% if error %}
+                                <h5 class="text-danger"><i class=" text-warning bi bi-exclamation-triangle-fill"></i> {{error}}</h5>
+                                {% endif %}
+                                <!-- Old password -->
+                                <div class="col-md-6">
+                                    <label for="oldpass" class="form-label">Old password *</label>
+                                    <input type="password" name="old" class="form-control" id="oldpass">
+                                </div>
+                                <!-- New password -->
+                                <div class="col-md-6">
+                                    <label for="newpass" class="form-label">New password *</label>
+                                    <input type="password" name="new1" class="form-control" id="newpass">
+                                </div>
+                                <!-- Confirm password -->
+                                <div class="col-md-12">
+                                    <label for="newpassconfirm" class="form-label">Confirm Password *</label>
+                                    <input type="password" name="new2" class="form-control" id="newpassconfirm">
+                                </div>
+                                <div class="col-md-6 ms-1">
+                                    <button type="submit" class="btn btn-primary">Update</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+             <!-- Row END -->
+        </div>
+    </div>
+</div>
+{% endblock content %}

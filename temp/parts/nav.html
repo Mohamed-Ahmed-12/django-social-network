@@ -1,0 +1,159 @@
+<!-- Nav -->
+{% load static %}
+{% load custom_tags %}
+{% if request.user.is_authenticated %}
+{% display_requests request  as myrequest %}
+{% endif %}
+<style>
+    #notification , #noti ,#messages {
+        transform: translate(-30%, -30%);
+        width: 1.25em;
+        height: 1.25em;
+    }
+    a{
+        text-decoration: none;
+    }
+</style>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-3">
+    <div class="container-fluid">
+        <div class="row w-100">
+            <a href="{% url 'index' %}" class="navbar-brand col-2 text-center" id="logo">
+                <img src="{% static 'images/index.png' %}" alt="" width="30" height="24"
+                    class="d-inline-block align-text-top "> Arab Social
+            </a>
+            <div class="col"></div>
+            <div class="d-flex justify-content-center col-3" id="navbarSupportedContent">
+                <div class="d-flex align-items-baseline">
+                    {% if request.user.is_authenticated %}
+                    <a href="#" class="nav-link position-relative">
+                        <span title="Notifications" class="bi-bell  text-white fs-5 "></span>
+                        <span class="text-white bg-danger text-center rounded-circle fw-bold position-absolute "
+                            id="notification">0</span>
+                    </a>
+                    <a href="#" class="nav-link position-relative">
+                        <span title="Messages" class="bi-envelope-fill text-white fs-5 "></span>
+                        <span class="text-white bg-danger text-center rounded-circle fw-bold position-absolute "
+                            id="messages">0</span>
+                    </a>
+                    <a href="#" class="nav-link position-relative">
+                    <button title="Requests"  type="button" class="bi-person-plus bg-transparent border-0 text-white fs-5 " data-bs-toggle="modal" data-bs-target="#requests"></button>
+                        <span class="text-white bg-danger text-center rounded-circle fw-bold position-absolute "
+                            id="noti">{{myrequest.count}}</span>
+                    </a>
+                    {% endif %}
+                    {% if request.user.is_authenticated %}
+                    <a href="#" class="nav-link dropdown-toggle " data-bs-toggle="dropdown">
+                        {% if not request.user.profile.photo %}
+                        <img src="{% static 'images/default.png' %}" width="40px" height="40px"
+                            class="rounded-circle" draggable="false">
+                        {% else %}
+                        <img src="{{ request.user.profile.photo.url }}" width="40px" height="40px"
+                            class="rounded-circle" draggable="false">
+                        {% endif %}
+                        <span class="text-muted ms-1">{{request.user}}</span>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end dropdown-menu-dark">
+                        <a href="{% url 'profile' slug=request.user.profile.slug %}" class="dropdown-item bi-person"> Profile</a>
+                        <a href="{% url 'settings' %}" class="dropdown-item bi-gear"> Settings</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="{% url 'logout' %}" class="dropdown-item bi-box-arrow-right"> Logout</a>
+                    </div>
+                    {% endif %}
+                </div>
+                {% if not request.user.is_authenticated %}
+                <div class="d-flex">
+                    <a href="{% url 'login' %}"><button class=" btn btn-primary">Log in</button></a>
+                    <a href="{% url 'signup' %}"><button class=" btn btn-outline-secondary ms-2">Sign up</button></a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</nav>
+<!-- End Nav-->
+
+<!-- Modal -->
+<div class="modal fade" id="requests" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title text-primary fw-bold " id="exampleModalLabel">Friend Requests </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            {% if myrequest.count > 0 %}
+            {% for re in myrequest.requests %}
+            <span class="d-flex justify-content-between align-items-center border p-1" id="{{re.id}}">
+                <div>
+                    {% if not re.send_from.profile.photo %}
+                        <img src="{% static 'images/default.png' %}" width="60px" height="60px" class="rounded-circle">
+                    {% else %}
+                        <img src="{{ re.send_from.profile.photo.url }}"  width="60px" height="60px" class="rounded-circle">
+                    {% endif %}
+                    <span class="fw-bold"><a href="{% url 'profile' slug=re.send_from.profile.slug %}">{{re.send_from.get_full_name}}</a></span>
+                </div>
+                <div>
+                    <button class=" btn btn-success btn-sm bi bi-check confirm-request" 
+                        data-senderid="{{re.send_from.id}}" 
+                        data-requestid="{{re.id}}" 
+                        data-action="confirm"> Confirm</button>
+
+                    <button class=" btn btn-outline-danger btn-sm bi bi-trash delete-request" 
+                        data-requestid="{{re.id}}" 
+                        data-action="delete"> Delete</button>
+                    <li class="bi-clock text-muted" style="font-size: .75em; "> {{re.created_at|timesince }}</li>
+                </div>
+            </span>
+            <br>
+            {% endfor %}
+            {% else %}
+            <h2 class="text-danger text-center">Ops You don't have any request</h2>
+            <img src="{% static 'images/usernotexist.webp' %}" width="100%" height="250px" class="rounded-1">
+            {% endif %}
+            
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- End Modal -->
+<script>
+    $(document).ready(function(){
+        $('.confirm-request').click(function(){
+            const requestID = Number(this.dataset.requestid);
+            const senderID = Number(this.dataset.senderid);
+            const action = this.dataset.action;
+            $(this).parent().parent().remove();
+            $.ajax('{% url "requestfriend" %}',{
+                data:{
+                    'id':JSON.stringify(senderID),
+                    'action':JSON.stringify(action),
+                    'requestid':JSON.stringify(requestID)
+                },
+                success:function(response){
+                    $('#noti').text(response.count);
+                }
+            });
+        });
+    });
+
+    $(document).ready(function(){
+        $('.delete-request').click(function(){
+            const requestID = Number(this.dataset.requestid);
+            const action = this.dataset.action;
+            $(this).parent().parent().remove();
+            $.ajax('{% url "requestfriend" %}',{
+                data:{
+                    'action':JSON.stringify(action),
+                    'requestid':JSON.stringify(requestID),
+                },
+                success:function(response){
+                    $('#noti').text(response.count);
+
+                }
+            });
+        });
+    });
+
+
+</script>
+

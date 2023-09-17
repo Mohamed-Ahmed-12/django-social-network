@@ -1,0 +1,432 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load static %}
+{% block content %}
+<style>
+    .btn-likes:hover{
+        transform: scale(2, 2);
+    }
+    textarea {
+        resize: none;
+    }
+    input{
+        outline:0;
+    }
+    .image-user{
+        transform: translate(-140px,10px);
+    }
+    .add-story-button{
+        transform: translate(-100px,125px);
+    }
+    .add-story-text{
+        transform: translate(35px,-30px);
+    }
+</style>
+{% if request.user.is_authenticated %}
+<div class="container-md ">
+    <div class="row gx-5" style="min-height: 100vh;">
+        <div class="col-3 d-none d-xl-block">
+            <div>
+                <div class="row shadow bg-white rounded-3 p-2">
+                    {% if not request.user.profile.photo %}
+                        <img src="{% static 'images/default.png' %}" height="50px" class="rounded col-3" draggable="false">
+                    {% else %}
+                        <a href="{% url 'profile' slug=request.user.profile.slug %}" class="col-4">
+                            <img src="{{request.user.profile.photo.url}}" height="120px" width="100%" class="rounded" draggable="false">
+                        </a>
+                    {% endif %}
+                    <div class="col-6">
+                        <a class="row text-decoration-none text-primary fw-bold" href="{% url 'profile' slug=request.user.profile.slug %}">{{ request.user.get_full_name }}</a>
+                        {% if request.user.profile.bio %}
+                            <span class="row text-muted">@{{request.user.profile.bio}}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <br>
+                {% for re in my_requests %}
+                <div class="toast-container my-3">
+                    <div class="toast text-dark fade show">
+                        <div class="toast-header text-dark">
+                            <strong class="me-auto"><i class="bi bi-person-plus-fill"></i> Request</strong>
+                            <small>{{ re.created_at | timesince}} ago</small>
+                            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                        </div>
+                        <div class="toast-body row p-2">
+                            <img src="{{ re.send_from.profile.photo.url }}" alt="" width="50px" height="50px" class="col-3 rounded-3">
+                            <p class="col"><a href="{% url 'profile' re.send_from.profile.slug %}" class="fw-bold">{{ re.send_from.get_full_name }}</a><br> Wants to add you to friends</p>
+                            <div class="row d-flex justify-content-between m-0">
+                                <button class="col btn btn-sm btn-primary rounded-pill confirm-request" data-requestid="{{ re.id }}" data-senderid="{{ re.send_from.id }}" data-action="confirm">Accept</button>
+                                <span class="col-1"></span>
+                                <button class="col btn btn-sm btn-outline-secondary rounded-pill delete-request" data-requestid="{{ re.id }}" data-action="delete">Decline</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <!-- Search -->
+            <div class="row shadow bg-white d-none d-xl-block p-2 border-bottom border-4 border-secondary">
+                <h5 class="text-primary"><span class="bi bi-search"></span> Search About Your Friends</h5>
+                <form class="d-flex p-2" method="POST" id="SearchFriend">{% csrf_token %}
+                    <input class="form-control rounded-pill" type="search" name="searchfriends" placeholder="Find Your Friends" aria-label="Search">
+                </form>
+                <!-- for loop here -->
+                <ul id="list-user" class="mt-1 p-1">
+                    {% if friends %}
+                    {% for f in friends.all %}
+                    <li> {{ f }}</li>
+                    {% endfor %}
+                    {% endif %}
+                </ul>
+                <!-- end for loop here -->
+            </div>
+        </div>
+        
+        <div class="col-6">
+
+            <!-- Add Post Form -->
+            <div class="p-2 shadow bg-light" id="post">
+                <form method="POST" enctype="multipart/form-data">{% csrf_token %}
+                    {{ form.description }}<br>
+                    {{ form.photo1 }}
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <button class="bi bi-cursor-fill btn btn-sm btn-primary mt-2" type="submit"> Share</button>
+                            <label for="id_photo1" class="bi bi-image-fill btn btn-sm btn-success mt-2"></label>
+                        </div>
+                        <input class="btn btn-sm btn-danger mt-2" type="reset" value="Reset">
+                    </div>
+                </form>
+            </div>
+
+            <!-- All Post in Home Page-->
+
+            <!-- Post -->
+            {% for post in posts %}
+            {% if post.user in request.user.profile.friends.all or post.user == request.user %}
+            <div class="rounded-3 shadow p-2 mt-4 bg-light" id="post{{ post.id }}">
+                <div class="row">
+                    <div class="col-10 d-flex">
+                        {% if not post.user.profile.photo %}
+                        <img src="{% static 'images/default.png' %}" width="45px" height="45px" class="rounded-circle"
+                        draggable="false">
+                        {% else %}
+                        <a href="{% url 'profile' slug=post.user.profile.slug %}">
+                            <img src="{{ post.user.profile.photo.url }}" width="45px" height="45px" class="rounded-circle"
+                            draggable="false">
+                        </a>
+                        <span class="bi-check-circle-fill text-primary" style="transform: translate(-7px,36%);text-align: center"></span>
+                        {% endif %}
+                        <div class="d-flex flex-column">
+                            <span class="fw-bold ms-2">
+                                <a class="text-decoration-none" href="{% url 'profile' slug=post.user.profile.slug %}">{{ post.user.get_full_name }}</a>
+                            </span>
+                            <span class="text-muted ms-2">
+                                <span class="bi-clock" style="font-size: .75em; "> {{ post.created_at|timesince }} ago</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-2 dropdown d-flex justify-content-end align-items-baseline">
+                        <button class="btn btn-outline-primary text-primary bg-transparent border-0 bi-three-dots"
+                            type="button" id="dropdownMenuButton2" data-bs-toggle="dropdown" aria-expanded="false">
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownMenuButton2">
+                            <li><button class="dropdown-item bi-eye-slash hide-post" data-postid="{{ post.id }}"> Hide</button></li>
+                            {% if request.user == post.user %}
+                            <li><button class="dropdown-item bi-trash btn-delete-post" data-postid="{{post.id}}" href="#"> Delete </button></li>
+                            <li><button class="dropdown-item bi-braces"> Modify</button></li>
+                            {% endif %}
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><button class="dropdown-item bi-bookmark-heart"> Save to Favourites</button></li>
+                        </ul>
+                    </div>
+                </div>
+                <hr>
+                <div class="row border-bottom p-0 m-0">
+                    <div class="row">
+                        <p>{{ post.description }}</p>
+                    </div>
+                    <div class="row p-0 m-0">
+                    {% if post.photo1.url is not null%}
+                    <img class="rounded-3 p-0 photo-post" src="{{ post.photo1.url }}" width="100%" height="500px" draggable="false" data-pid="{{ post.id }}">
+                    {% endif %}
+                    </div>
+                </div>
+                <!-- reactions -->
+                <div class="d-flex justify-content-between fw-bold text-muted" style="font-size: .75em;">
+                    <div>
+                        <div class="dropend">
+                            <div class="dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span id="like-count-post{{ post.id }}">{{ post.number_of_likes }} </span>
+                                <span class="text-decoration-underline" style="cursor: pointer;"> Reactions</span>
+                            </div>
+                            {% if post.reactions.count > 0 %}
+                            <ul class="dropdown-menu">
+                                {% for u in post.reactions.all %}
+                                    <li class="dropdown-item">
+                                        <img src="{{ u.profile.photo.url }}" alt="" width="50px" height="50px" class="rounded-circle">
+                                        <a class="text-decoration-none" href="{% url 'profile' slug=u.profile.slug %}">{{ u.get_full_name }}</a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div>
+                        <span>{{ post.number_of_comments }} Comments .</span>
+                        <span>Share</span>
+                    </div>
+                </div>
+
+                <div class="row p-2">
+                    <div class="col-4 d-flex  justify-content-center align-items-center">
+                        {% if request.user in post.reactions.all %}
+                        <button class="bg-transparent border-0 text-danger bi-heart-fill btn-likes" data-id="{{ post.id }}"></button>
+                        {% endif %}
+
+                        {% if request.user not in post.reactions.all or  not post.reactions.all %}
+                        <button class="bg-transparent border-0 text-danger bi-heart btn-likes" data-id="{{ post.id }}"></button>
+                        {% endif %}
+                        <span class="text-muted">Love</span>
+                    </div>
+                    <div class="col-4 d-flex justify-content-center align-items-center">
+                        <button class="bg-transparent border-0 text-success bi bi-chat-square-text commentbtn" data-postid="{{ post.id }}"></button>
+                        <span class="text-muted">Comment</span>
+                    </div>
+                    <div class="col-4 d-flex justify-content-center align-items-center">
+                        <button class="bg-transparent border-0 text-danger bi-box-arrow-up-right"></button>
+                        <span class="text-muted">Share</span>
+                    </div>
+                </div>
+                <div class="commentSection mt-3" id="{{ post.id }}">
+                    {% for comment in comments %}
+                    {% if comment.post == post %}
+                    <div class="row">
+                        <a href="{% url 'profile' slug=comment.user.profile.slug %}" class="col-auto">
+                            <img src="{{ comment.user.profile.photo.url }}" alt="{{comment.user}}" width="40px" height="50px"
+                                class="rounded-circle">
+                        </a>
+                        <span class="col d-flex flex-column rounded-right rounded-bottom rounded-3 lh-base p-2" style="background-color: #edf2f7 ;">
+                            <div class="d-flex justify-content-between">
+                                <a class="text-decoration-none fw-bold small"
+                                href="{% url 'profile' slug=comment.user.profile.slug %}">{{ comment.user.get_full_name }}</a>
+                                <span class="text-muted fs-s" style="font-size: smaller;"> {{ comment.created_at|timesince}}</span>
+                            </div>
+                            <p class="">{{ comment.body }}</p>
+                        </span>
+                        <span class="col-1"></span>
+                    </div>
+                    <br>
+                    {% endif %}
+                    {% endfor %}
+                    <!-- users can not comment in own posts  -->
+                    {% if post.user != request.user %}
+                    <div class="row mt-1 pt-2 border-top ">
+                        {% if not request.user.profile.photo %}
+                        <img src="{% static 'images/default.png' %}" alt="" width="40px" height="40px"
+                        class="rounded-circle col-1">
+                        {% else %}
+                        <img src="{{ request.user.profile.photo.url }}" alt="" width="40px" height="50px"
+                            class="rounded-circle col-1">
+                        {% endif %}
+                        <form method="POST" class="col p-0">{% csrf_token %}
+                            <input type="hidden" name="post_id" value="{{ post.id }}">
+                            <input type="text" name="comment" placeholder="Type comment . . ." style="border-radius: 0 1.25rem 1.25em 1.25em  !important; "
+                                class="p-2 border-primary shadow ps-3 w-100 bg-transparent">
+                            <button type="submit" hidden=""></button>
+                        </form>
+                        <span class="col-1"></span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+            <!-- End of Post -->
+        </div>
+    </div>
+</div>
+
+<script>
+    /**/
+     const textArea = document.getElementById('id_description');
+        textArea.style.backgroundColor = "transparent";
+        textArea.style.border = "0";
+        textArea.style.outline = "0";
+        textArea.setAttribute('autocorrect', "off");
+        textArea.setAttribute('placeholder', 'What\'s on Your Mind?');
+        textArea.cols = 81;
+        textArea.rows = 1;
+        textArea.addEventListener('input', function () {
+            textArea.rows = 5;
+        })
+
+        /**/
+        const imgField = document.getElementById('id_photo1');
+        imgField.className = "btn btn-sm btn-secondary mt-2 custom-file-input";
+        imgField.setAttribute('hidden', '');
+
+        for (let u = 0; u < document.getElementsByTagName('input').length; u++) {
+            document.getElementsByTagName('input')[u].setAttribute('autocomplete', 'off');
+        }
+
+    /**/
+     $(document).ready(function () {
+            $('.btn-likes').click(function () {
+                const postID = Number(this.dataset.id);
+                $(this).toggleClass('bi-heart bi-heart-fill');
+                $.ajax({
+                    type: "GET",
+                    url: '/likepost',
+                    data: {
+                        'postID': JSON.stringify(postID),
+                    },
+                    success: function (response) {
+                        $(`#like-count-post${postID}`).slideUp("slow");
+                        setTimeout(function () {
+                            $(`#like-count-post${postID}`).hide();
+                            $(`#like-count-post${postID}`).slideDown("slow").text(response.like)
+                        }, 500);
+                    }
+                });
+            });
+            
+        });
+
+        $(document).ready(function () {
+            $('.photo-post').dblclick(function () {
+                const postID = Number(this.dataset.pid);
+                $("div div").find(`button[data-id="${postID}"]`).toggleClass('bi-heart bi-heart-fill');
+                $.ajax({
+                    type: "GET",
+                    url: '/likepost',
+                    data: {
+                        'postID': JSON.stringify(postID),
+                    },
+                    success: function (response) {
+                        $(`#like-count-post${postID}`).slideUp("slow");
+                        setTimeout(function () {
+                            $(`#like-count-post${postID}`).hide();
+                            $(`#like-count-post${postID}`).slideDown("slow").text(response.like)
+                        }, 500);
+
+                    }
+                });
+            });
+        });
+
+        $(document).ready(function () {
+            $('.btn-delete-post').click(function () {
+                const postID = Number(this.dataset.postid);
+                $(this).parent().parent().parent().parent().parent().remove();
+                $.ajax({
+                    type: "GET",
+                    url: '/deletepost',
+                    data: {
+                        'postID': JSON.stringify(postID)
+                    },
+                    success: function () {
+
+                    }
+                })
+            });
+        });
+
+
+        $(document).ready(function () {
+            $("#SearchFriend input[name=searchfriends]").keyup(function (e) {
+                //e.preventDefault();
+                $('#list-user').children().remove();
+                const key = $("#SearchFriend input[name=searchfriends]").val();
+                const csrf = $("#SearchFriend input[name=csrfmiddlewaretoken]").val();
+                $.ajax({
+                    type: "POST",
+                    url: '/account/searchfriend',
+                    headers: {
+                        "X-CSRFToken": csrf,
+                    },
+                    data: {
+                        'search': JSON.stringify(key),
+                    },
+                    success: function (data) {
+                        obj = JSON.parse(data.people);
+                        for (let i = 0; i < obj.length; i++) {
+                            $('#list-user').append(`
+                                <li class="d-flex justify-content-between align-items-center p-2 border-top">
+                                    <span class="d-flex justify-content-around">
+                                        <img src="/media/${obj[i].fields.photo}" width="45px" height="45px" class="rounded-circle" >
+                                        <span class="d-flex flex-column ms-2">
+                                            <a href="/account/profile/${obj[i].fields.slug}" class="fw-bold ">${obj[i].fields.slug}</a>
+                                            <span style="font-size:.75em">@${obj[i].fields.bio}</span>
+                                        </span>
+                                    </span>
+                                    <button class="btn btn-sm btn-outline-primary bi-person-plus"></button> 
+                                </li>
+                            `);
+                        }
+                    }
+
+                })
+            });
+        });
+
+
+        $(document).ready(function(){
+        $('.confirm-request').click(function(){
+            const requestID = Number(this.dataset.requestid);
+            const senderID = Number(this.dataset.senderid);
+            const action = this.dataset.action;
+            $(this).parent().parent().remove();
+            $.ajax('{% url "requestfriend" %}',{
+                data:{
+                    'id':JSON.stringify(senderID),
+                    'action':JSON.stringify(action),
+                    'requestid':JSON.stringify(requestID)
+                },
+                success:function(response){
+                    $('#noti').text(response.count);
+                }
+            });
+        });
+    });
+
+    $(document).ready(function(){
+        $('.delete-request').click(function(){
+            const requestID = Number(this.dataset.requestid);
+            const action = this.dataset.action;
+            $(this).parent().parent().remove();
+            $.ajax('{% url "requestfriend" %}',{
+                data:{
+                    'action':JSON.stringify(action),
+                    'requestid':JSON.stringify(requestID),
+                },
+                success:function(response){
+                    $('#noti').text(response.count);
+
+                }
+            });
+        });
+    });
+
+
+    $(".commentbtn").click(function(){
+        const postID = this.dataset.postid;
+        $(`#${postID}`).slideToggle();
+    });
+        
+    document.addEventListener("DOMContentLoaded", function(){
+        var toastElementList = [].slice.call(document.querySelectorAll(".toast"));
+        var toastList = toastElementList.map(function(element){
+            return new bootstrap.Toast(element, {
+                autohide: false
+            });
+        });
+    });
+
+</script>
+
+{% endif %}
+{% endblock content %}
+

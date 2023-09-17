@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container border p-2" style="height: 85vh;">
+    <h3>Password Rest</h3>
+    <p>Forgotten your password ? Enter your Email address below , and we will email instructions for setting a new one</p>
+    <form method="POST">
+        {% csrf_token %}
+        <label for="email">Enter Your Email:</label>
+        <input type="email" name="email" id="email" style="width:13em" autocomplete="off">
+        <hr>
+        <input type="submit" value="Send" class="btn btn-primary btn-sm">
+    </form>
+</div>
+{% endblock %}

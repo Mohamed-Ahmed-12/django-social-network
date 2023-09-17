@@ -1,0 +1,577 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+    body {
+        background-color: #eeeeee;
+    }
+
+    #profileimg {
+        transform: translate(25px,-50%);
+    }
+
+    a {
+        text-decoration: none;
+    }
+    .bi-camera{
+        transform: translate(75px,50px);
+    }
+
+</style>
+
+<div class="container bg-light">
+    <div class="p-0">
+        <img src="{% static 'images/sky.jpg' %}" width="100%" height="250px"
+            class="position-relative border-bottom border-white">
+    </div>
+    <div class="row">
+
+        <div class="col-2">
+            <div class="p-2">
+                {% if not img %}
+                <img id="profileimg" src="{% static 'images/default.svg' %}" width="150px" height="150px"
+                    class="rounded-3 border border-3 border-white position-absolute" draggable="false">
+                    <i class="bi bi-camera"></i>
+                {% else %}
+                <img id="profileimg" src="{{ img.url }}" width="150px" height="150px"
+                    class="rounded-3 border border-3 border-white position-absolute" draggable="false">
+                    <form action="">
+                        <input type="file" id="customFile" name="file" hidden="">
+                        <label for="customFile" class="bi bi-camera btn btn-success rounded-circle"></label>
+                        <input type="submit" value="" hidden>    
+                    </form>                
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-2">
+            <div class="fs-6 d-flex flex-column">
+                <span class="fw-bold">
+                    {{fullname}} <span class="bi-patch-check-fill text-primary"
+                        style="transform: translate(0,0);text-align: center"></span>
+                </span>
+                <span class="text-muted fs-6">
+                    <span class="fs-sm text-secondary" style="font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif ;">{{bio}}</span>
+                </span>
+            </div>
+        </div>
+        <div class="col"></div>
+
+        <div class="col-3 d-flex justify-content-around align-items-center text-primary fw-bold" id="links">
+            <a href="#posts" class="bi bi-paperclip"> Posts({{count}})</a>
+            <a href="#" class="bi-images"> Photos</a>
+            {% if request.user == user %}
+            <a href="{% url 'settings' %}" class="bi bi-gear"> Settings</a>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+<br>
+<br>
+
+<div class="container">
+    <div class="row" style="gap:2em">
+        <!-- About User -->
+        <div class="col bg-light" style="height: fit-content;">
+            <h4 class="text-center my-2"><i class="bi bi-person"></i> Profile Information</h4>
+
+            <ul class="lh-lg p-2">
+                <li class="d-flex">
+                    <span class="fw-bold" style="font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif ;"><i class="bi bi-envelope text-primary me-3"></i> {{ user.email }}</span>
+                </li>
+                <li class="d-flex">
+                    <span class="fw-bold" style="font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif ;"><i class="bi bi-telephone text-primary me-3"></i> {{ phone }}</span>
+                </li>
+                <li class="d-flex">
+                    <span class="fw-bold" style="font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif ;"><i class="bi bi-gender-trans text-primary me-3"></i> {{ gender }}</span>
+                </li>
+                <li class="d-flex">
+                    <span class="fw-bold" style="font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif ;"><i class="bi bi-flag-fill text-primary me-3"></i> {{ country }}</span>
+                </li>
+            </ul>
+            {% if request.user != user %}
+                {% if request_exist %}
+
+                    {% for req in myoutcomingrequest.requests %}
+                        {% if req.send_to == user %}
+                            <button class="btn btn-danger bi-person-dash-fill fw-bold w-100 my-2 cancel-request" data-action="delete" data-requestid="{{ req.id }}"> Cancle Request</button>
+                        {% endif %}
+                    {% endfor %}
+                            
+                {% elif user in request.user.profile.friends.all %}
+                    <button class="btn btn-success bi-person-dash-fill fw-bold w-100 my-2 btn-delete-friend" data-id="{{ user.id }}"> Unfriend</button>
+
+                {% else %}
+                    <button class="btn btn-primary bi-person-plus-fill fw-bold w-100 my-2 btn-add" data-id="{{ user.id }}"> Add Friend</button>
+                {% endif %}
+            {% endif %}
+            <div class="row row-cols-3 border-top">
+                <div class="col-auto d-flex flex-column text-center">
+                    <h3 class="text-primary">{{number_of_friends}}</h3>
+                    <h6>Friends</h6>
+                </div>
+                <div class="col-auto d-flex flex-column text-center">
+                    <h3 class="text-primary">3.1k</h3>
+                    <h6>Followers</h6>
+                </div>
+                <div class="col-auto d-flex flex-column text-center">
+                    <h3 class="text-primary">5k</h3>
+                    <h6>Following</h6>
+                </div>
+            </div>
+        </div>
+        <!-- End of About -->
+
+        <!-- Posts -->
+        <div class="col-md-6 col-12 p-0" id="posts">
+            <!-- Own Posts -->
+            {% for post in posts %}
+            <div class="rounded-3 shadow p-2 bg-light mb-4" id="post{{ post.id }}">
+                <div class="row">
+                    <div class="col-10 d-flex">
+                        {% if not post.user.profile.photo %}
+                        <img src="{% static 'images/default.svg' %}" width="45px" height="45px" class="rounded-circle"
+                            draggable="false">
+                        {% else %}
+                        <img src="{{ post.user.profile.photo.url }}" width="45px" height="45px" class="rounded-circle"
+                            draggable="false">
+                        <span class="bi-check-circle-fill text-primary"
+                            style="transform: translate(-7px,36%);text-align: center"></span>
+                        {% endif %}
+                        <div class="d-flex flex-column">
+                            <span class="fw-bold ms-2">
+                                <a class="text-decoration-none"
+                                    href="{% url 'profile' slug=post.user.profile.slug %}">{{ post.user.get_full_name }}</a>
+                            </span>
+                            <span class="text-muted ms-2">
+                                <span class="bi-clock" style="font-size: .75em; "> {{ post.created_at|timesince }}
+                                    ago</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-2 dropdown d-flex justify-content-end align-items-baseline">
+                        <button class="btn btn-outline-primary text-primary bg-transparent border-0 bi-three-dots"
+                            type="button" id="dropdownMenuButton2" data-bs-toggle="dropdown" aria-expanded="false">
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownMenuButton2">
+                            <li><button class="dropdown-item bi-eye-slash hide-post" data-postid="{{ post.id }}"> Hide</button></li>
+                            {% if request.user == post.user %}
+                            <li><button class="dropdown-item bi-trash btn-delete-post" data-postid="{{post.id}}"
+                                    href="#"> Delete </button></li>
+                            <li><button class="dropdown-item bi-braces"> Modify</button></li>
+                            {% endif %}
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><button class="dropdown-item bi-bookmark-heart" href="#"> Save to Favourites</button></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row border-bottom pt-2 pb-2">
+                    <p class="col">{{ post.description }}</p>
+                    {% if post.photo1.url is not null%}
+                    <img class="rounded-1 photo-post" src="{{ post.photo1.url }}" width="100%" height="500px"
+                        draggable="false" data-pid="{{ post.id }}">
+                    {% endif %}
+                </div>
+                <!-- reactions -->
+                <div class="d-flex justify-content-between fw-bold text-muted" style="font-size: .75em;">
+                    <div>
+                        <div class="dropend">
+                            <div class="dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span id="like-count-post{{ post.id }}">{{ post.number_of_likes }} </span>
+                                <span class="text-decoration-underline" style="cursor: pointer;"> Reactions</span>
+                            </div>
+                            {% if post.reactions.count > 0 %}
+                            <ul class="dropdown-menu">
+                                {% for u in post.reactions.all %}
+                                <li class="dropdown-item">
+                                    <img src="{{ u.profile.photo.url }}" alt="" width="50px" height="50px"
+                                        class="rounded-circle">
+                                    <a class="text-decoration-none" href="{% url 'profile' slug=u.profile.slug %}">{{ u.get_full_name }}</a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div>
+                        <span>{{ post.number_of_comments }} Comments .</span>
+                        <span>Share</span>
+                    </div>
+                </div>
+
+                <div class="row p-2">
+                    <div class="col-4 d-flex  justify-content-center align-items-center">
+                        {% if request.user in post.reactions.all %}
+                        <button class="bg-transparent border-0 text-danger bi-heart-fill btn-likes"
+                            data-id="{{ post.id }}"></button>
+                        {% endif %}
+
+                        {% if request.user not in post.reactions.all or not post.reactions.all %}
+                        <button class="bg-transparent border-0 text-danger bi-heart btn-likes"
+                            data-id="{{ post.id }}"></button>
+                        {% endif %}
+                        <span class="text-muted">Love</span>
+                    </div>
+                    <div class="col-4 d-flex justify-content-center align-items-center">
+                        <button class="bg-transparent border-0 text-success bi bi-chat-square-text commentbtn" data-postid="{{ post.id }}"></button>
+                        <span class="text-muted">Comment</span>
+                    </div>
+                    <div class="col-4 d-flex justify-content-center align-items-center">
+                        <button class="bg-transparent border-0 text-danger bi-box-arrow-up-right"></button>
+                        <span class="text-muted">Share</span>
+                    </div>
+                </div>
+                <div class="commentSection mt-3" id="{{ post.id }}">
+                    {% for comment in comments %}
+                        {% if comment.post == post %}
+                        <div class="row">
+                            <a href="{% url 'profile' slug=comment.user.profile.slug %}" class="col-auto">
+                                <img src="{{ comment.user.profile.photo.url }}" alt="" width="40px" height="50px"
+                                class="rounded-circle">
+                            </a>
+                            <span class="col d-flex flex-column rounded-right rounded-bottom rounded-3 lh-base p-2"
+                                style="background-color: #edf2f7 ;">
+                                <div class="d-flex justify-content-between">
+                                    <a class="text-decoration-none fw-bold small"
+                                        href="{% url 'profile' slug=comment.user.profile.slug %}">{{ comment.user.get_full_name }}</a>
+                                    <span class="text-muted fs-s" style="font-size: smaller;"> {{ comment.created_at|timesince}}</span>
+                                </div>
+                                <p class="">{{ comment.body }}</p>
+                            </span>
+                            <span class="col-1"></span>
+                        </div>
+                        <br>
+                        {% endif %}
+                    {% endfor %}
+                    <!-- users can not comment in own posts  -->
+                    {% if post.user != request.user %}
+                    <div class="row mt-1 pt-2 border-top ">
+                        {% if not request.user.profile.photo %}
+                        <img src="{% static 'images/default.png' %}" alt="" width="40px" height="40px"
+                            class="rounded-circle col-1">
+                        {% else %}
+                        <a href="{% url 'profile' slug=request.user.profile.slug %}" class="col-1">
+                            <img src="{{ request.user.profile.photo.url }}" alt="" width="40px" height="50px"
+                                class="rounded-circle">
+                        </a>
+                        {% endif %}
+                        <form method="POST" class="col p-0">{% csrf_token %}
+                            <input type="hidden" name="post_id" value="{{ post.id }}">
+                            <input type="text" name="comment" placeholder="Type comment . . ."
+                                style="border-radius: 0 1.25rem 1.25em 1.25em  !important; "
+                                class="p-2 border-primary shadow ps-3 w-100 bg-transparent">
+                            <button type="submit" hidden=""></button>
+                        </form>
+                        <span class="col-1"></span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Share Posts -->
+            {% for share in shares %}
+            <div class="rounded-3 shadow p-2 bg-light mb-4" id="post{{ post.id }}">
+                <div class="row my-2">
+                    <img src="{{ img.url }}" width="45px" height="45px" class="rounded-circle col-auto"
+                    draggable="false">
+                    <div class="col">
+                        <span class="row fw-bold">
+                            <a class="text-decoration-none"
+                            href="{% url 'profile' slug=user.profile.slug %}">{{ fullname }}</a>
+                        </span>
+                        <span class="row text-secondary ms-1" style="font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;">share this post</span>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-10 d-flex">
+                        {% if not share.post.user.profile.photo %}
+                        <img src="{% static 'images/default.svg' %}" width="45px" height="45px" class="rounded-circle"
+                            draggable="false">
+                        {% else %}
+                        <img src="{{ share.post.user.profile.photo.url }}" width="45px" height="45px" class="rounded-circle"
+                            draggable="false">
+                        <span class="bi-check-circle-fill text-primary"
+                            style="transform: translate(-7px,36%);text-align: center"></span>
+                        {% endif %}
+                        <div class="d-flex flex-column">
+                            <span class="fw-bold ms-2">
+                                <a class="text-decoration-none"
+                                    href="{% url 'profile' slug=share.post.user.profile.slug %}">{{ share.post.user.get_full_name }}</a>
+                            </span>
+                            <span class="text-muted ms-2">
+                                <span class="bi-clock" style="font-size: .75em; "> {{ share.post.created_at|timesince }}
+                                    ago</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-2 dropdown d-flex justify-content-end align-items-baseline">
+                        <button class="btn btn-outline-primary text-primary bg-transparent border-0 bi-three-dots"
+                            type="button" id="dropdownMenuButton2" data-bs-toggle="dropdown" aria-expanded="false">
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownMenuButton2">
+                            <li><button class="dropdown-item bi-eye-slash hide-post" data-postid="{{ share.post.id }}"> Hide</button></li>
+                            {% if request.user == share.post.user %}
+                            <li><button class="dropdown-item bi-trash btn-delete-post" data-postid="{{share.post.id}}"
+                                    href="#"> Delete </button></li>
+                            <li><button class="dropdown-item bi-braces"> Modify</button></li>
+                            {% endif %}
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><button class="dropdown-item bi-bookmark-heart" href="#"> Save to Favourites</button></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row border-bottom pt-2 pb-2">
+                    <p class="col">{{ share.post.description }}</p>
+                    {% if share.post.photo1.url is not null%}
+                    <img class="rounded-1 photo-post" src="{{ share.post.photo1.url }}" width="100%" height="500px"
+                        draggable="false" data-pid="{{ share.post.id }}">
+                    {% endif %}
+                </div>
+                <!-- reactions -->
+                <div class="d-flex justify-content-between fw-bold text-muted" style="font-size: .75em;">
+                    <div>
+                        <div class="dropend">
+                            <div class="dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span id="like-count-post{{ share.post.id }}">{{ share.post.number_of_likes }} </span>
+                                <span class="text-decoration-underline" style="cursor: pointer;"> Reactions</span>
+                            </div>
+                            {% if share.post.reactions.count > 0 %}
+                            <ul class="dropdown-menu">
+                                {% for u in share.post.reactions.all %}
+                                <li class="dropdown-item">
+                                    <img src="{{ u.profile.photo.url }}" alt="" width="50px" height="50px"
+                                        class="rounded-circle">
+                                    <a class="text-decoration-none" href="{% url 'profile' slug=u.profile.slug %}">{{ u.get_full_name }}</a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div>
+                        <span>{{ share.post.number_of_comments }} Comments .</span>
+                        <span>Share</span>
+                    </div>
+                </div>
+
+                <div class="row p-2">
+                    <div class="col-4 d-flex  justify-content-center align-items-center">
+                        {% if request.user in share.post.reactions.all %}
+                        <button class="bg-transparent border-0 text-danger bi-heart-fill btn-likes"
+                            data-id="{{ share.post.id }}"></button>
+                        {% endif %}
+
+                        {% if request.user not in share.post.reactions.all or not share.post.reactions.all %}
+                        <button class="bg-transparent border-0 text-danger bi-heart btn-likes"
+                            data-id="{{ share.post.id }}"></button>
+                        {% endif %}
+                        <span class="text-muted">Love</span>
+                    </div>
+                    <div class="col-4 d-flex justify-content-center align-items-center">
+                        <button class="bg-transparent border-0 text-success bi bi-chat-square-text commentbtn" data-postid="{{ share.post.id }}"></button>
+                        <span class="text-muted">Comment</span>
+                    </div>
+                    <div class="col-4 d-flex justify-content-center align-items-center">
+                        <button class="bg-transparent border-0 text-danger bi-box-arrow-up-right"></button>
+                        <span class="text-muted">Share</span>
+                    </div>
+                </div>
+                <div class="commentSection mt-3" id="{{ share.post.id }}">
+                    {% for comment in comments %}
+                        {% if comment.post == post %}
+                        <div class="row">
+                            <a href="{% url 'profile' slug=comment.user.profile.slug %}" class="col-auto">
+                                <img src="{{ comment.user.profile.photo.url }}" alt="" width="40px" height="50px"
+                                class="rounded-circle">
+                            </a>
+                            <span class="col d-flex flex-column rounded-right rounded-bottom rounded-3 lh-base p-2"
+                                style="background-color: #edf2f7 ;">
+                                <div class="d-flex justify-content-between">
+                                    <a class="text-decoration-none fw-bold small"
+                                        href="{% url 'profile' slug=comment.user.profile.slug %}">{{ comment.user.get_full_name }}</a>
+                                    <span class="text-muted fs-s" style="font-size: smaller;"> {{ comment.created_at|timesince}}</span>
+                                </div>
+                                <p class="">{{ comment.body }}</p>
+                            </span>
+                            <span class="col-1"></span>
+                        </div>
+                        <br>
+                        {% endif %}
+                    {% endfor %}
+                    <!-- users can not comment in own posts  -->
+                    {% if share.post.user != request.user %}
+                    <div class="row mt-1 pt-2 border-top ">
+                        {% if not request.user.profile.photo %}
+                        <img src="{% static 'images/default.png' %}" alt="" width="40px" height="40px"
+                            class="rounded-circle col-1">
+                        {% else %}
+                        <a href="{% url 'profile' slug=request.user.profile.slug %}" class="col-1">
+                            <img src="{{ request.user.profile.photo.url }}" alt="" width="40px" height="50px"
+                                class="rounded-circle">
+                        </a>
+                        {% endif %}
+                        <form method="POST" class="col p-0">{% csrf_token %}
+                            <input type="hidden" name="post_id" value="{{ share.post.id }}">
+                            <input type="text" name="comment" placeholder="Type comment . . ."
+                                style="border-radius: 0 1.25rem 1.25em 1.25em  !important; "
+                                class="p-2 border-primary shadow ps-3 w-100 bg-transparent">
+                            <button type="submit" hidden=""></button>
+                        </form>
+                        <span class="col-1"></span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <!-- End of Posts -->
+        
+
+        <!-- Friends -->
+        <div class="col bg-light" style="height: fit-content;">
+            <h4 class="text-center my-2"><i class="bi bi-people"></i> Friends</h4>
+            <hr>
+            <div class="row g-3">
+                {% for f in friends %}
+                <span class="d-flex justify-content-between align-items-center p-2 border border-3 my-2">
+                    <a href="{% url 'profile' slug=f.profile.slug %}">
+                        <img src="{{ f.profile.photo.url }}" width="45px" height="45px" class="rounded-circle">
+                    </a>
+                    <span class="text-center text-primary fw-bold"><a href="{% url 'profile' slug=f.profile.slug %}">{{ f.get_full_name }}</a></span>
+                    <span></span>
+                    {% if f in request.user.profile.friends.all %}
+                        <button class="btn btn-sm btn-outline-primary bi-person-check btn-delete-friend" data-id="{{ f.id }}"></button>
+                    {% else %}
+                        {% if f != request.user %}
+                            <button class="btn btn-sm btn-outline-primary bi-person-plus btn-add" data-id="{{ f.id }}"></button>
+                        {% else %}
+                            <span> </span>
+                        {% endif %}
+                    {% endif %}
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+        <!-- End of Friends -->
+    </div>
+</div>
+<script>
+    /**/
+    $(document).ready(function () {
+        $('.btn-likes').click(function () {
+            const postID = Number(this.dataset.id);
+            $(this).toggleClass('bi-heart bi-heart-fill');
+            $.ajax({
+                type: "GET",
+                url: '/likepost',
+                data: {
+                    'postID': JSON.stringify(postID),
+                },
+                success: function (response) {
+                    $(`#like-count-post${postID}`).slideUp("slow");
+                    setTimeout(function () {
+                        $(`#like-count-post${postID}`).hide();
+                        $(`#like-count-post${postID}`).slideDown("slow").text(response.like)
+                    }, 500);
+                }
+            });
+        });
+
+    });
+
+    $(document).ready(function () {
+        $('.photo-post').dblclick(function () {
+            const postID = Number(this.dataset.pid);
+            $("div div").find(`button[data-id="${postID}"]`).toggleClass('bi-heart bi-heart-fill');
+            $.ajax({
+                type: "GET",
+                url: '/likepost',
+                data: {
+                    'postID': JSON.stringify(postID),
+                },
+                success: function (response) {
+                    $(`#like-count-post${postID}`).slideUp("slow");
+                    setTimeout(function () {
+                        $(`#like-count-post${postID}`).hide();
+                        $(`#like-count-post${postID}`).slideDown("slow").text(response.like)
+                    }, 500);
+
+                }
+            });
+        });
+    });
+    /**/
+    $(document).ready(function () {
+        $('.btn-delete-post').click(function () {
+            const postID = Number(this.dataset.postid);
+            $(this).parent().parent().parent().parent().parent().remove();
+            $.ajax({
+                type: "GET",
+                url: '/deletepost',
+                data: {
+                    'postID': JSON.stringify(postID)
+                },
+                success: function () {
+
+                }
+            })
+        });
+    });
+    $(document).ready(function () {
+        $('.btn-add').click(function () {
+            const userID = Number(this.dataset.id);
+            $.ajax({
+                type: "GET",
+                url: '/account/addfriend',
+                data: {
+                    'userID': JSON.stringify(userID),
+                }
+            });
+        });
+    });
+
+
+    $(document).ready(function () {
+        $('.btn-delete-friend').click(function () {
+            const userID = Number(this.dataset.id);
+            $.ajax({
+                type: "GET",
+                url: '/account/deletefriend',
+                data: {
+                    'userID': JSON.stringify(userID),
+                }
+            });
+        });
+    });
+
+    $(document).ready(function(){
+        $('.cancel-request').click(function(){
+            const requestID = Number(this.dataset.requestid);
+            const action = this.dataset.action;
+            
+            $.ajax({
+                type: "GET",
+                url: "/account/requestfriend",
+                data:{
+                    'action':JSON.stringify(action),
+                    'requestid':JSON.stringify(requestID),
+                },
+            });
+        });
+    });
+
+    $(".commentbtn").click(function(){
+            const postID = this.dataset.postid;
+            $(`#${postID}`).slideToggle();
+        }); 
+</script>
+{% endblock content %}
