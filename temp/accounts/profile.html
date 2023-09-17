@@ -173,7 +173,7 @@
                 <div class="row border-bottom pt-2 pb-2">
                     <p class="col">{{ post.description }}</p>
                     {% if post.photo1.url is not null%}
-                    <img class="rounded-1 photo-post" src="{{ post.photo1.url }}" width="100%" height="500px"
+                    <img class="rounded-1 photo-post img-fluid" src="{{ post.photo1.url }}" width="100%" height="500px"
                         draggable="false" data-pid="{{ post.id }}">
                     {% endif %}
                 </div>
@@ -276,7 +276,7 @@
 
             <!-- Share Posts -->
             {% for share in shares %}
-            <div class="rounded-3 shadow p-2 bg-light mb-4" id="post{{ post.id }}">
+            <div class="rounded-3 shadow p-2 bg-light mb-4" id="post{{ share.post.id }}">
                 <div class="row my-2">
                     <img src="{{ img.url }}" width="45px" height="45px" class="rounded-circle col-auto"
                     draggable="false">
@@ -287,6 +287,9 @@
                         </span>
                         <span class="row text-secondary ms-1" style="font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;">share this post</span>
                     </div>
+                </div>
+                <div class="row mt-4">
+                    <h5 class="text-success">{{ share.body }}</h5>
                 </div>
                 <hr>
                 <div class="row">
@@ -332,7 +335,7 @@
                 <div class="row border-bottom pt-2 pb-2">
                     <p class="col">{{ share.post.description }}</p>
                     {% if share.post.photo1.url is not null%}
-                    <img class="rounded-1 photo-post" src="{{ share.post.photo1.url }}" width="100%" height="500px"
+                    <img class="rounded-1 photo-post img-fluid" src="{{ share.post.photo1.url }}" width="100%" height="500px"
                         draggable="false" data-pid="{{ share.post.id }}">
                     {% endif %}
                 </div>
