@@ -18,5 +18,4 @@ https://github.com/Mohamed-Ahmed-12/django-social-network/assets/84830168/25ff65
 
 
 # admin user and passwd
-username: mohamed
-passwd: 123123
+(username: mohamed) & (passwd: 123123)
